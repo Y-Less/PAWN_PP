@@ -90,6 +90,10 @@
  * pushed in reverse parameter order (as in PAWN), resulting in the code above
  * being equivalent to `(5 + 6) - (40 + 80)`.
  * 
+ * It should also be noted that because the vast majority of the calculations
+ * done in this way are done destructively in-place, there are no line-length
+ * limitations to worry about (unless your equation itself is stupidly long).
+ * 
  * `PP_TOKENISE` is a synonym for `PP_UNWRAP`, meaning you can do:
  * 
  *     #define MY_MACRO_1(%0) %0 from MY_MACRO one
@@ -121,7 +125,7 @@
  * That would (somewhat clunkily) enable:
  * 
  *     PP_CHAIN( \
- *         PP_CONST(MAX_PLAYERS) \
+ *         PP_MACRO(MAX_PLAYERS) \
  *         PP_POP()              \
  *         PP_ADD(1,$)           \
  *     )
@@ -134,21 +138,61 @@
  *     _PP_MACRO(500)
  *     500
  * 
- * Someone using `PP_CONST(MAX_PLAYERS)` inside `PP_CHAIN()` would get:
+ * Someone using `PP_MACRO(MAX_PLAYERS)` inside `PP_CHAIN()` would get:
  * 
- *     PP_CONST(MAX_PLAYERS)
+ *     PP_MACRO(MAX_PLAYERS)
  *     MAX_PLAYERS_(_THEN)
  *     MACRO(500)(_THEN)
  *     _PP_MACRO_THEN(500)
- *     _PP_CONST(500)
+ *     _PP_MACRO(500)
  * 
  * The trick being that `PP_CHAIN` replaces all the functions inside it with
  * `_THEN` suffixed versions.  This is the only way I could find to let macros
  * use information calculated by other macros before they were evaluated.
  * 
- * It should also be noted that because the vast majority of the calculations
- * done in this way are done destructively in-place, there are no line-length
- * limitations to worry about (unless your equation itself is stupidly long).
+ * I could not get this to work for constants as well as macros, so this will
+ * not work:
+ * 
+ *     PP_CHAIN( \
+ *         PP_MACRO(100)         \
+ *         PP_POP()              \
+ *         PP_ADD(1,$)           \
+ *     )
+ * 
+ * Instead use `PP_PUSH` (or `PP_CONST` in exactly the same way):
+ * 
+ *     PP_CHAIN( \
+ *         PP_PUSH(100)          \
+ *         PP_POP()              \
+ *         PP_ADD(1,$)           \
+ *     )
+ * 
+ * This is slightly awkward, as it does mean that a macro like this will not
+ * work in all generic cases:
+ * 
+ *     #define Dialog[%1](%2) \
+ *         PP_CHAIN( \
+ *             PP_MACRO(%1)       \
+ *             PP_TOKENISE(@dlg$) \
+ *         )(%2)
+ * 
+ * This will work:
+ * 
+ *     #define DIALOG_LOGIN_ID DIALOG_LOGIN_ID_()
+ *     #define DIALOG_LOGIN_ID_ MACRO(101)
+ *     
+ *     Dialog[DIALOG_LOGIN_ID](playerid, dialogid, response)
+ *     {
+ *     }
+ * 
+ * This will not:
+ * 
+ *     Dialog[101](playerid, dialogid, response)
+ *     {
+ *     }
+ * 
+ * Sadly, you would need a separate version for the two cases, like
+ * `DialogNumber` and `DialogMacro`.
 **/
 #define PP_CHAIN(%0(%1)%2) %0_(%1)(_THEN)%2_PP_DONE()$()
 #define _PP_DONE_()%9$(%0) %0
@@ -168,7 +212,8 @@
 
 #define _PP_MACRO(%0) %0
 #define _PP_MACRO_THEN(%0) PP_PUSH_(%0)()
-#define PP_CONST_(%0) %0_(_THEN)
+#define PP_MACRO_(%0) %0_(_THEN)
+#define PP_CONST_ PP_PUSH_
 
 #define MACRO(%0)(%8) _PP_MACRO%8(%0)
 
