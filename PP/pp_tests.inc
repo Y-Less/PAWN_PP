@@ -1,3 +1,7 @@
+// Test generic negation.
+#assert PP_MINUS(3) == -3
+#assert PP_MINUS(-3) == 3
+
 // Test generic addition.
 #assert PP_ADD(10,20)   == 30
 #assert PP_ADD(10,-20)  == -10
@@ -96,6 +100,40 @@
 	PP_ADD(5,-9)  \
 	PP_POP1()     \
 	PP_SUB($,2)   \
+	PP_POP()      \
+	PP_ID($)      \
+) == -6
+
+#assert PP_CHAIN( \
+	PP_ADD(5,-9)  \
+	PP_POP1()     \
+	PP_SUB($,2)   \
+	PP_POP()      \
+	PP_MINUS($)   \
+	PP_POP()      \
+	PP_ID($)      \
+) == 6
+
+#assert PP_CHAIN( \
+	PP_ADD(5,-9)  \
+	PP_POP1()     \
+	PP_SUB($,2)   \
+	PP_POP()      \
+	PP_MINUS($)   \
+	PP_POP()      \
+	PP_MINUS($)   \
+	PP_POP()      \
+	PP_ID($)      \
+) == -6
+
+#assert PP_CHAIN( \
+	PP_ADD(5,-9)  \
+	PP_POP1()     \
+	PP_SUB($,2)   \
+	PP_POP()      \
+	PP_MINUS($)   \
+	PP_POP()      \
+	PP_MINUS($)   \
 	PP_POP()      \
 	PP_MINUS($)   \
 	PP_POP()      \

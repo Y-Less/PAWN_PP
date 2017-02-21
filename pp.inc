@@ -115,39 +115,32 @@
  * for being used in `PP_CHAIN`, mainly those that use a `_THEN` variant.  To
  * write a standard value macro to work here would look like:
  * 
- *     #define MAX_PLAYERS        _MAX_PLAYERS()      // Standard entry point.
- *     #define MAX_PLAYERS_THEN() _MAX_PLAYERS(_THEN) // Chain entry point.
- *     #define _MAX_PLAYERS(%8)   PP_VALUE%8(500)     // Define the true value.
+ *     #define MAX_PLAYERS  MAX_PLAYERS_() // Standard entry point - note `()`s.
+ *     #define MAX_PLAYERS_ MACRO(500)     // Define the true value.
  * 
  * That would (somewhat clunkily) enable:
  * 
  *     PP_CHAIN( \
- *         MAX_PLAYERS() \
- *         PP_POP()      \ // Synonym for `PP_POP1` and `PP_POP_1`
- *         PP_ADD(1,$)   \
+ *         PP_CONST(MAX_PLAYERS) \
+ *         PP_POP()              \
+ *         PP_ADD(1,$)           \
  *     )
  * 
  * Someone using `MAX_PLAYERS` would get:
  * 
  *     MAX_PLAYERS
- *     _MAX_PLAYERS()
- *     PP_VALUE(500)
+ *     MAX_PLAYERS_()
+ *     MACRO(500)()
+ *     _PP_MACRO(500)
  *     500
  * 
- * Someone using `MAX_PLAYERS()` would get:
+ * Someone using `PP_CONST(MAX_PLAYERS)` inside `PP_CHAIN()` would get:
  * 
- *     MAX_PLAYERS()
- *     _MAX_PLAYERS()()
- *     PP_VALUE(500)()
- *     500()
- * 
- * Someone using `MAX_PLAYERS()` inside `PP_CHAIN()` would get:
- * 
- *     MAX_PLAYERS()
- *     MAX_PLAYERS_THEN()
- *     _MAX_PLAYERS(_THEN)
- *     PP_VALUE_THEN(500)
- *     PP_PUSH_THEN(500)
+ *     PP_CONST(MAX_PLAYERS)
+ *     MAX_PLAYERS_(_THEN)
+ *     MACRO(500)(_THEN)
+ *     _PP_MACRO_THEN(500)
+ *     _PP_CONST(500)
  * 
  * The trick being that `PP_CHAIN` replaces all the functions inside it with
  * `_THEN` suffixed versions.  This is the only way I could find to let macros
@@ -157,25 +150,27 @@
  * done in this way are done destructively in-place, there are no line-length
  * limitations to worry about (unless your equation itself is stupidly long).
 **/
-#define PP_CHAIN(%0(%1)%2) %0_THEN(%1)%2_PP_DONE()$()
-#define _PP_DONE_THEN()$(%0) %0
+#define PP_CHAIN(%0(%1)%2) %0_(%1)(_THEN)%2_PP_DONE()$()
+#define _PP_DONE_()%9$(%0) %0
 
-#define PP_PUSH_THEN(%0)%1(%2)%3$(%4) %1_THEN(%2)%3$((%0)%4)
-#define PP_POP_THEN()%0(%1$%2)%3$((%4)%5) %0_THEN(%1%4%2)%3$(%5)
-#define PP_POP1_THEN()%0(%1$%2)%3$((%4)%5) %0_THEN(%1%4%2)%3$(%5)
-#define PP_POP2_THEN()%0(%1$%2$%3)%4$((%5)(%6)%7) %0_THEN(%1%6%2%5%3)%4$(%7)
-#define PP_POP3_THEN()%0(%1$%2$%3$%4)%5$((%6)(%7)(%8)%9) %0_THEN(%1%8%2%7%3%6%4)%5$(%9)
-#define PP_POP_1_THEN PP_POP1_THEN
-#define PP_POP_2_THEN PP_POP2_THEN
-#define PP_POP_3_THEN PP_POP3_THEN
-#define PP_PRINT_THEN(%0$%1)%2(%3)%4$((%5)%6) %2_THEN(%3)%4$((%0%5%1))
-#define PP_UNWRAP_THEN(%0$%1)%2(%3)%4$((%5)%6) %2_THEN(%3)%4$(%0%5%1)
-#define PP_TOKENISE_THEN(%8$%9)%2(%3)%4$((%5)%6) %2_THEN(%3)%4$(%8%5%9%6)
-#define PP_TOKENIZE_THEN(%8$%9)%2(%3)%4$((%5)%6) %2_THEN(%3)%4$(%8%5%9%6)
+#define PP_PUSH_(%0)(%9)%1(%2)%3$(%4) %1_(%2)(_THEN)%3$((%0)%4)
+#define PP_POP_()(%9)%0(%1$%2)%3$((%4)%5) %0_(%1%4%2)(_THEN)%3$(%5)
+#define PP_POP1_()(%9)%0(%1$%2)%3$((%4)%5) %0_(%1%4%2)(_THEN)%3$(%5)
+#define PP_POP2_()(%9)%0(%1$%2$%3)%4$((%5)(%6)%7) %0_(%1%6%2%5%3)(_THEN)%4$(%7)
+#define PP_POP3_()(%9)%0(%1$%2$%3$%4)%5$((%6)(%7)(%8)%9) %0_(%1%8%2%7%3%6%4)(_THEN)%5$(%9)
+#define PP_POP_1_ PP_POP1_
+#define PP_POP_2_ PP_POP2_
+#define PP_POP_3_ PP_POP3_
+#define PP_PRINT_(%0$%1)(%7)%2(%3)%4$((%5)%6) %2_(%3)(_THEN)%4$((%0%5%1))
+#define PP_UNWRAP_(%0$%1)(%7)%2(%3)%4$((%5)%6) %2_(%3)(_THEN)%4$(%0%5%1)
+#define PP_TOKENISE_(%8$%9)(%7)%2(%3)%4$((%5)%6) %2_(%3)(_THEN)%4$(%8%5%9%6)
+#define PP_TOKENIZE_(%8$%9)(%7)%2(%3)%4$((%5)%6) %2_(%3)(_THEN)%4$(%8%5%9%6)
 
-#define PP_THEN.%0(%1)%2(%3)%4$(%5) %0(%1)%2_THEN(%3)%4$(%5)
-#define PP_VALUE(%0) %0
-#define PP_VALUE_THEN(%0) PP_PUSH_THEN(%0)
+#define _PP_MACRO(%0) %0
+#define _PP_MACRO_THEN(%0) PP_PUSH_(%0)()
+#define PP_CONST_(%0) %0_(_THEN)
+
+#define MACRO(%0)(%8) _PP_MACRO%8(%0)
 
 /**
  *               PP_ADD(7,8)
@@ -191,8 +186,8 @@
  * (inclusive) are guaranteed to work; however, some other values in certain
  * positions may work if the result is still within +/-512.
 **/
-#define PP_ADD(%0,%1) _PP_STEP_%1(ADD,%0)()
-#define PP_ADD_THEN(%0,%1) _PP_STEP_%1(ADD,%0)(_THEN)
+#define PP_ADD(%0,%1) PP_ADD_(%0,%1)()
+#define PP_ADD_(%0,%1) _PP_STEP_%1(ADD,%0)
 
 /**
  *               PP_SUB(7,8)
@@ -208,8 +203,8 @@
  * values (inclusive) are guaranteed to work; however, some other values in
  * certain positions may work if the result is still within +/-512.
 **/
-#define PP_SUB(%0,%1) _PP_STEP_%1(SUB,%0)()
-#define PP_SUB_THEN(%0,%1) _PP_STEP_%1(SUB,%0)(_THEN)
+#define PP_SUB(%0,%1) PP_SUB_(%0,%1)()
+#define PP_SUB_(%0,%1) _PP_STEP_%1(SUB,%0)
 
 /**
  *               PP_MINUS(5)
@@ -219,8 +214,8 @@
  * negative number that would not be a valid macro name.  Exposed here because
  * why not?
 **/
-#define PP_MINUS(%0) _PP_MINUS_%0()
-#define PP_MINUS_THEN(%0) _PP_MINUS_%0(_THEN)
+#define PP_MINUS(%0) PP_MINUS_(%0)()
+#define PP_MINUS_(%0) _PP_MINUS_%0
 
 /**
  * Deferred operators.  When you want, say, a bracket in the output but don't
@@ -264,15 +259,15 @@
  *   `PP_ENCLOSE` returns its parameter wrapped in brackets.
  *   `PP_TAG` returns its parameter with a default tag override.
 **/
-#define PP_DROP(%0)
-#define PP_ID(%0)      %0
-#define PP_ENCLOSE(%0) (%0)
-#define PP_TAG(%0)     (_:(%0))
+#define PP_DROP(%0)    PP_DROP_(%0)()
+#define PP_ID(%0)      PP_ID_(%0)()
+#define PP_ENCLOSE(%0) PP_ENCLOSE_(%0)()
+#define PP_TAG(%0)     PP_TAG_(%0)()
 
-#define PP_DROP_THEN    PP_THEN.PP_DROP
-#define PP_ID_THEN      PP_THEN.PP_ID
-#define PP_ENCLOSE_THEN PP_THEN.PP_ENCLOSE
-#define PP_TAG_THEN     PP_THEN.PP_TAG
+#define PP_DROP_(%0)    MACRO()
+#define PP_ID_(%0)      MACRO(%0)
+#define PP_ENCLOSE_(%0) MACRO((%0))
+#define PP_TAG_(%0)     MACRO((_:(%0)))
 
 /**
  *               PP_AMP(5)
@@ -296,29 +291,15 @@
 /**
  *               PP_LOG2(32)
  *               PP_LOG2(0.25)
- *               PP_LOG_2(65,536)
- *               PP_LOG_2(268'435'456)
  * 
  * Finds the log-2 base of a power of 2 number.  Only goes up to 2**73 due to
  * symbol length restrictions, but that is still vastly more than can be fit in
- * to 32-bit or 64-bit cells.  Takes numbers as plain, comma thousands separated
- * and apostrophe thousands separated.  Not dot separated, sorry Europe.
- * 
- * Can resolve to just a number or a less accurate, but more flexible, tagged
- * number.  Define `PP_LOG2_SEPARATORS` to get to use `,` and `'`, but not use
- * it in a chain.
+ * to 32-bit or 64-bit cells.
 **/
-#if defined PP_LOG2_SEPARATORS
-	#define PP_LOG2(%0) (_:PP_LC:PP_LA:_PP_LOG2_%0)
-	#define PP_LC:%0,%1) PP_LC:%0%1)
-	#define PP_LA:%0'%1) PP_LA:%0%1)
-#else
-	#define PP_LOG2(%0) _PP_LOG2_%0()
-	#define _PP_LOG2_0. _PP_LOG2_m
-#endif
-#define PP_LOG2_THEN(%0) _PP_LOG2_%0(_THEN)
-#define PP_LOG_2 PP_LOG2
-#define PP_LOG_2_THEN PP_LOG2_THEN
+#define PP_LOG2(%0)  PP_LOG2_(%0)()
+#define PP_LOG2_(%0) _PP_LOG2_%0
+#define _PP_LOG2_0.  _PP_LOG2_m
+#define PP_LOG_2     PP_LOG2
 
 /**
  *               PP_POW2(32)
@@ -330,10 +311,10 @@
  * the support range isn't large enough), and the result for negatives will be a
  * floating point number.
 **/
-#define PP_POW2(%0) _PP_POW2_%0()
-#define PP_POW2_THEN(%0) _PP_POW2_%0(_THEN)
-#define _PP_POW2_- _PP_POW2_m
-#define PP_POW_2 PP_POW2
+#define PP_POW2(%0)  PP_POW2_(%0)()
+#define PP_POW2_(%0) _PP_POW2_%0
+#define _PP_POW2_0.  _PP_POW2_m
+#define PP_POW_2     PP_POW2
 
 /**
  *               PP_PREVENT_EXPANSION(A_MACRO(macro, parameters))
@@ -517,7 +498,8 @@ static stock const _PP_PACKED_STRING[] = "PACKED";
 #define _PP_ADD_-%0(%1) _PP_ADD_PP_MINUS_%0(%1)
 
 // A negative negative is positive.
-#define PP_MINUS_- PP_MINUS_PP_MINUS_
+//#define _PP_MINUS_- PP_MINUS_PP_MINUS_
+#define _PP_MINUS_- _PP_MINUS_PP_MINUS_
 
 // Include the other macros.
 #if !defined PP_MAX_MATHS

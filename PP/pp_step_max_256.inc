@@ -254,5 +254,5 @@
 #define _PP_STEP_3(%9,%0) _PP_%9_%0(2)
 #define _PP_STEP_2(%9,%0) _PP_%9_%0(1)
 #define _PP_STEP_1(%9,%0) _PP_%9_%0(0)
-#define _PP_STEP_0(%9,%0)(%8) PP_VALUE%8(%0)
+#define _PP_STEP_0(%9,%0) MACRO(%0)
 
