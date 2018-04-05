@@ -358,7 +358,7 @@
 **/
 #define PP_POW2(%0)  PP_POW2_(%0)()
 #define PP_POW2_(%0) _PP_POW2_%0
-#define _PP_POW2_0.  _PP_POW2_m
+#define _PP_POW2_-  _PP_POW2_m
 #define PP_POW_2     PP_POW2
 
 /**
