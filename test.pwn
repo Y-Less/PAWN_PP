@@ -1,3 +1,5 @@
+#include "pp.inc"
+
 // Test generic negation.
 #assert PP_MINUS(3) == -3
 #assert PP_MINUS(-3) == 3
@@ -289,10 +291,12 @@ static stock const _PP_TEST_STRING_7P[] = PP_STRINGISE_PACKED(Hello ... #world);
 static stock const _PP_TEST_STRING_8P[] = PP_STRINGISE_PACKED(Hello ... world);
 static stock const _PP_TEST_STRING_9P[] = PP_STRINGISE_PACKED();
 
+main()
+{
+}
+
 static stock _PP_TEST_PREVENT_EXPANSION(a, b, c)
 {
-	// Need to disable the recursion warnings here maybe.
 	#define _PP_TEST_PREVENT_EXPANSION(%0,%1,%2) PP_ERROR("Macro was expanded")
 	PP_PREVENT_EXPANSION(_PP_TEST_PREVENT_EXPANSION(a, b, c));
 }
-
