@@ -571,5 +571,3 @@ static stock const _PP_PACKED_STRING[] = "PACKED";
 	#include "PP/pp_minus_max_1024.inc"
 #endif
 
-#include "PP/pp_tests.inc"
-

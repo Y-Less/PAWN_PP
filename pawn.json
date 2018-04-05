@@ -1,0 +1,15 @@
+{
+	"user": "Y-Less",
+	"repo": "PAWN_PP",
+	"entry": "test.pwn",
+	"output": "test.amx",
+	"builds": [
+        {
+            "name": "main",
+			"args": ["-w238"]
+        }
+	],
+	"runtime": {
+        "mode": "main"
+	}
+}
