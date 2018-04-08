@@ -3,7 +3,7 @@
 PAWN_PP is a library that defines pre-processor macros useful for performing compile-time maths and concatenations. 
 
 
-# __Functions__
+## __Functions__
 
 
 
@@ -461,7 +461,7 @@ I'm not too sure how the explicit `#` there will fare, since that may result
 in `##` in some compilers - fine for `SA-MP` but I don't know about 4.x.
 
 
-# __Installation__
+## __Installation__
 
 Simply install to your project:
 
